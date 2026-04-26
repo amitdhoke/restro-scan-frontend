@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RestroScan</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nunito',sans-serif;background:#e5e5e5;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+.phone{width:390px;height:844px;background:#fff;border-radius:40px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;display:flex;flex-direction:column;}
+.screen{display:none;flex-direction:column;height:100%;position:absolute;top:0;left:0;width:100%;background:#fff;}
+.screen.active{display:flex;}
+.top-bar{height:8px;background:#f97316;border-radius:40px 40px 0 0;flex-shrink:0;}
+#welcome{align-items:center;justify-content:space-between;padding:50px 30px 40px;}
+.welcome-title{font-size:32px;font-weight:900;color:#f97316;letter-spacing:1px;text-align:center;}
+.welcome-img-wrap{width:270px;height:270px;border-radius:32px;overflow:hidden;box-shadow:0 10px 40px rgba(249,115,22,0.18);margin:10px 0;}
+.welcome-img-wrap img{width:100%;height:100%;object-fit:cover;}
+.welcome-food-text{text-align:center;}
+.good-food{font-size:30px;font-weight:900;color:#1a1a1a;display:block;}
+.good-mood{font-size:30px;font-weight:900;color:#f97316;display:block;}
+.welcome-desc{font-size:12px;color:#999;text-align:center;line-height:1.6;max-width:260px;margin:8px 0 16px;}
+.btn-orange{background:#f97316;color:#fff;border:none;border-radius:50px;padding:17px 0;font-size:17px;font-weight:800;cursor:pointer;width:100%;max-width:300px;transition:transform 0.1s,background 0.2s;font-family:'Nunito',sans-serif;}
+.btn-orange:active{transform:scale(0.97);background:#ea6c0a;}
+#menu{overflow:hidden;}
+.menu-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:90px;scrollbar-width:none;}
+.menu-scroll::-webkit-scrollbar{display:none;}
+.search-wrap{padding:14px 16px 0;}
+.search-bar{display:flex;align-items:center;background:#f5f5f5;border-radius:50px;padding:10px 16px;gap:10px;}
+.search-icon{font-size:14px;color:#aaa;}
+.search-bar input{border:none;background:transparent;flex:1;font-size:14px;font-family:'Nunito',sans-serif;color:#333;outline:none;}
+.search-bar input::placeholder{color:#bbb;}
+.mic-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;}
+.mic-icon{width:24px;height:24px;background:#f97316;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.mic-icon svg{fill:#fff;}
+.mic-btn.listening .mic-icon{background:#ef4444;animation:pulse 0.8s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4);}50%{box-shadow:0 0 0 8px rgba(239,68,68,0);}}
+.tab-bar{display:flex;padding:0 16px;border-bottom:2px solid #f0f0f0;overflow-x:auto;scrollbar-width:none;cursor:grab;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{padding:10px 12px;font-size:13px;font-weight:700;color:#bbb;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color 0.15s;}
+.tab.active{color:#f97316;border-bottom:3px solid #f97316;}
+.veg-toggle{display:flex;align-items:center;gap:8px;padding:10px 16px 4px;}
+.toggle-wrap{width:48px;height:26px;background:#22c55e;border-radius:50px;display:flex;align-items:center;padding:2px;cursor:pointer;transition:background 0.2s;}
+.toggle-wrap.off{background:#ccc;}
+.toggle-knob{width:22px;height:22px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s;}
+.toggle-wrap .toggle-knob{transform:translateX(22px);}
+.toggle-wrap.off .toggle-knob{transform:translateX(0);}
+.veg-label{font-size:13px;font-weight:800;color:#22c55e;}
+.toggle-wrap.off+.veg-label{color:#ccc;}
+.menu-list{padding:0 16px;}
+.menu-item{padding:14px 0;border-bottom:1px solid #f2f2f2;}
+.item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.item-info{flex:1;}
+.item-name{font-size:15px;font-weight:800;color:#1a1a1a;margin-bottom:3px;}
+.item-desc{font-size:11px;color:#bbb;line-height:1.4;}
+.item-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.price-display{font-size:13px;font-weight:800;color:#f97316;min-height:18px;}
+.add-btn{background:#fff7f0;color:#f97316;border:1.5px solid #f97316;border-radius:20px;padding:5px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.15s;margin-top:4px;}
+.add-btn:hover,.add-btn:active{background:#f97316;color:#fff;}
+.added-indicator{font-size:11px;color:#22c55e;font-weight:700;margin-top:2px;}
+.view-cart-bar{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;z-index:10;}
+.view-cart-btn{background:#f97316;color:#fff;border:none;border-radius:50px;padding:15px 60px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(249,115,22,0.4);font-family:'Nunito',sans-serif;transition:transform 0.1s;}
+.view-cart-btn:active{transform:scale(0.97);}
+.no-results{text-align:center;padding:40px 20px;color:#bbb;font-size:14px;font-weight:600;}
+#cart{overflow:hidden;}
+.cart-scroll{flex:1;overflow-y:auto;padding:0 20px 100px;scrollbar-width:none;}
+.cart-scroll::-webkit-scrollbar{display:none;}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:800;color:#1a1a1a;cursor:pointer;padding:14px 0 6px;background:none;border:none;font-family:'Nunito',sans-serif;}
+.cart-title{text-align:center;font-size:21px;font-weight:900;color:#1a1a1a;padding:8px 0 14px;border-bottom:1px solid #eee;}
+.cart-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.cart-table thead th{color:#f97316;font-size:12px;font-weight:800;text-align:left;padding:10px 4px;}
+.cart-table thead th:last-child{text-align:right;}
+.cart-table tbody td{padding:13px 4px;font-size:13px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #f5f5f5;vertical-align:middle;}
+.cart-table tbody td:last-child{text-align:right;}
+.empty-cart{text-align:center;padding:40px;color:#bbb;font-size:14px;font-weight:600;}
+.order-instructions{margin-top:20px;}
+.order-instructions label{font-size:15px;font-weight:800;color:#1a1a1a;}
+.order-instructions textarea{width:100%;margin-top:10px;border:1.5px solid #eee;border-radius:16px;padding:12px;font-size:13px;font-family:'Nunito',sans-serif;resize:none;height:90px;outline:none;color:#555;transition:border 0.2s;}
+.order-instructions textarea:focus{border-color:#f97316;}
+.place-btn-wrap{display:flex;justify-content:center;padding:18px 0 8px;}
+#preparing{background:#f97316;justify-content:space-between;}
+.prep-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.bell-wrap{font-size:72px;animation:ringBell 1.2s infinite;}
+@keyframes ringBell{0%,100%{transform:rotate(0);}10%{transform:rotate(15deg);}20%{transform:rotate(-12deg);}30%{transform:rotate(10deg);}40%{transform:rotate(-8deg);}50%{transform:rotate(6deg);}60%{transform:rotate(0);}}
+.prep-title{font-size:40px;font-weight:900;color:#fff;}
+.prep-sub{font-size:15px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.3px;text-align:center;padding:0 18px;}
+.done-bar{background:#fff;display:flex;align-items:center;justify-content:center;padding:26px;}
+.done-btn{font-size:20px;font-weight:900;color:#1a1a1a;background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;letter-spacing:1px;}
+.toast{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:50px;font-size:13px;font-weight:700;opacity:0;transition:opacity 0.3s;white-space:nowrap;z-index:999;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="phone" id="app">
+  <div class="toast" id="toast"></div>
+
+  <div class="screen active" id="welcome">
+    <div class="top-bar"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:space-between;flex:1;padding:40px 30px 36px;">
+      <div class="welcome-title" id="restaurantName">Gurukripa Family Restaurant</div>
+      <div class="welcome-img-wrap">
+        <img src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&q=80" alt="Food"/>
+      </div>
+      <div class="welcome-food-text">
+        <span class="good-food">Good Food</span>
+        <span class="good-mood">Good Mood</span>
+      </div>
+      <p class="welcome-desc" id="welcomeMeta">Scan table QR to browse menu and place your order.</p>
+      <button class="btn-orange" onclick="goTo('menu')">Go To Menu Card</button>
+    </div>
+  </div>
+
+  <div class="screen" id="menu">
+    <div class="top-bar"></div>
+    <div class="search-wrap">
+      <div class="search-bar">
+        <span class="search-icon">Search</span>
+        <input type="text" id="searchInput" placeholder='Search "Paneer"' oninput="filterMenu()"/>
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Voice Search">
+          <div class="mic-icon">
+            <svg width="12" height="16" viewBox="0 0 12 16"><rect x="3.5" y="0" width="5" height="10" rx="2.5"/><path d="M0.5 7.5A5.5 5.5 0 0 0 11.5 7.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6" y1="13" x2="6" y2="15.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="3.5" y1="15.5" x2="8.5" y2="15.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div class="tab-bar" id="tabBar"></div>
+
+    <div class="veg-toggle">
+      <div class="toggle-wrap" id="vegToggle" onclick="toggleVeg()"><div class="toggle-knob"></div></div>
+      <span class="veg-label" id="vegLabel">Veg Only</span>
+    </div>
+
+    <div class="menu-scroll">
+      <div class="menu-list" id="menuList"></div>
+    </div>
+
+    <div class="view-cart-bar" id="viewCartBar" style="display:none;">
+      <button class="view-cart-btn" onclick="goTo('cart')">View Cart</button>
+    </div>
+  </div>
+
+  <div class="screen" id="cart">
+    <div class="top-bar"></div>
+    <div class="cart-scroll">
+      <button class="back-btn" onclick="goTo('menu')">Back to Menu</button>
+      <div class="cart-title" id="cartTitle">My Cart (0)</div>
+      <div id="cartContent"></div>
+      <div class="order-instructions">
+        <label>Order Instructions</label>
+        <textarea id="orderNote" placeholder="Any special requests, allergies, or preferences..."></textarea>
+      </div>
+      <div class="place-btn-wrap">
+        <button class="btn-orange" style="max-width:260px;" onclick="placeOrder()">Place your meal</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="preparing">
+    <div class="top-bar" style="background:rgba(255,255,255,0.3);"></div>
+    <div class="prep-body">
+      <div class="bell-wrap">|</div>
+      <div class="prep-title">Order Live</div>
+      <div class="prep-sub" id="prepStatus">Your food is being prepared...</div>
+    </div>
+    <div class="done-bar">
+      <button class="done-btn" id="doneBtn" onclick="donePreparing()">Back To Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_CANDIDATES = Array.from(new Set([
+  window.RESTRO_API_BASE,
+  `${window.location.origin}/api`,
+  "http://127.0.0.1:8000",
+].filter(Boolean)));
+let menuData = [];
+let cart = [];
+let activeTab = "All Items";
+let vegOn = true;
+let activeSearch = "";
+let recognition = null;
+let micListening = false;
+let restaurantId = null;
+let tableId = null;
+let currentOrderId = null;
+let pollTimer = null;
+let selectedPortion = {};
+
+function parseParams() {
+  const p = new URLSearchParams(window.location.search);
+  restaurantId = Number.parseInt(p.get("restaurant_id") || "1", 10);
+  const tableParam = p.get("table_id");
+  tableId = tableParam ? Number.parseInt(tableParam, 10) : 0;
+}
+
+async function apiRequest(path, options = {}) {
+  let lastError = null;
+
+  for (const base of API_CANDIDATES) {
+    try {
+      const res = await fetch(`${base}${path}`, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options,
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.detail || `HTTP ${res.status}`);
+      }
+      return res.json();
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error("Backend API not reachable");
+}
+
+function isVegItem(name, description) {
+  const t = `${name || ""} ${description || ""}`.toLowerCase();
+  const nonVegWords = ["chicken", "mutton", "fish", "egg", "prawn", "beef"];
+  return !nonVegWords.some((w) => t.includes(w));
+}
+
+async function loadMenu() {
+  const data = await apiRequest(`/customer/menu/${restaurantId}/${tableId || 0}`);
+  const restaurantName = data.restaurant_name || "Restaurant";
+  const tableLabel = data.table_label || (tableId ? `T-${tableId}` : "Walk-in");
+  document.getElementById("restaurantName").textContent = restaurantName;
+  document.getElementById("welcomeMeta").textContent = `Table ${tableLabel} is connected. Order directly from your phone.`;
+
+  menuData = (data.menu || []).map((m) => ({
+    id: m.id,
+    name: m.name,
+    desc: m.description || "Freshly prepared.",
+    full_price: Number(m.price || 0),
+    half_price: m.half_price != null ? Number(m.half_price) : null,
+    cat: m.category || "Uncategorized",
+    tags: `${m.name || ""} ${m.description || ""} ${m.category || ""}`.toLowerCase().split(/\s+/),
+    veg: isVegItem(m.name, m.description),
+  }));
+  selectedPortion = {};
+  menuData.forEach((m) => {
+    selectedPortion[m.id] = "FULL";
+  });
+
+  buildTabs();
+  renderMenu();
+}
+
+function buildTabs() {
+  const cats = ["All Items", ...new Set(menuData.map((x) => x.cat))];
+  const tabBar = document.getElementById("tabBar");
+  tabBar.innerHTML = cats.map((cat) => `<div class="tab ${cat === activeTab ? "active" : ""}" onclick="selectTab(this, '${cat.replace(/'/g, "\\'")}')">${cat}</div>`).join("");
+}
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'cart') renderCart();
+  if (id === 'menu') renderMenu();
+}
+
+function filterMenu() {
+  activeSearch = document.getElementById('searchInput').value.trim().toLowerCase();
+  renderMenu();
+}
+
+function getFilteredItems() {
+  return menuData.filter(item => {
+    const matchSearch = !activeSearch || item.name.toLowerCase().includes(activeSearch) || item.tags.some(t => t.includes(activeSearch));
+    const matchTab = activeTab === 'All Items' || item.cat === activeTab;
+    const matchVeg = !vegOn || item.veg;
+    return matchSearch && matchTab && matchVeg;
+  });
+}
+
+function renderMenu() {
+  const list = document.getElementById('menuList');
+  const items = getFilteredItems();
+  if (items.length === 0) {
+    list.innerHTML = '<div class="no-results">No items found. Try a different search.</div>';
+    return;
+  }
+  list.innerHTML = items.map(item => {
+    const selPortion = selectedPortion[item.id] || "FULL";
+    const unitPrice = selPortion === "HALF" && item.half_price != null ? item.half_price : item.full_price;
+    const inCart = cart.find(c => c.item_id === item.id && c.portion === selPortion);
+    const hasHalf = item.half_price != null;
+    return `
+    <div class="menu-item">
+      <div class="item-top">
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${item.desc}</div>
+        </div>
+        <div class="item-right"><div class="price-display">Rs ${unitPrice.toFixed(2)}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="add-btn" style="padding:4px 10px;${selPortion === "FULL" ? "background:#f97316;color:#fff;" : ""}" onclick="selectPortion(${item.id}, 'FULL')">Full Rs ${item.full_price.toFixed(2)}</button>
+          ${hasHalf ? `<button class="add-btn" style="padding:4px 10px;${selPortion === "HALF" ? "background:#f97316;color:#fff;" : ""}" onclick="selectPortion(${item.id}, 'HALF')">Half Rs ${item.half_price.toFixed(2)}</button>` : ""}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <button class="add-btn" onclick="addToCart(${item.id})">Add to cart</button>
+          ${inCart ? `<div class="added-indicator">In cart x${inCart.number}</div>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectPortion(itemId, portion) {
+  selectedPortion[itemId] = portion;
+  renderMenu();
+}
+
+function addToCart(itemId) {
+  const item = menuData.find(i => i.id === itemId);
+  if (!item) return;
+  const portion = selectedPortion[itemId] || "FULL";
+  const unitPrice = portion === "HALF" && item.half_price != null ? item.half_price : item.full_price;
+  const existing = cart.find(c => c.item_id === itemId && c.portion === portion);
+  if (existing) {
+    existing.number += 1;
+    showToast(`${item.name} (${portion}) quantity updated`);
+  } else {
+    cart.push({ item_id: item.id, name: item.name, portion, price: unitPrice, number: 1 });
+    showToast(`${item.name} (${portion}) added`);
+  }
+  updateCartBar();
+  renderMenu();
+}
+
+function updateCartBar() {
+  document.getElementById('viewCartBar').style.display = cart.length > 0 ? 'flex' : 'none';
+}
+
+function selectTab(el, tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderMenu();
+}
+
+function toggleVeg() {
+  vegOn = !vegOn;
+  const tog = document.getElementById('vegToggle');
+  const lbl = document.getElementById('vegLabel');
+  tog.classList.toggle('off', !vegOn);
+  lbl.textContent = vegOn ? 'Veg Only' : 'All Items';
+  lbl.style.color = vegOn ? '#22c55e' : '#999';
+  renderMenu();
+}
+
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('Voice search not supported in this browser');
+    return;
+  }
+  if (micListening) {
+    recognition && recognition.stop();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-IN';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  micListening = true;
+  document.getElementById('micBtn').classList.add('listening');
+  showToast('Listening...');
+  recognition.start();
+  recognition.onresult = e => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('searchInput').value = text;
+    activeSearch = text.toLowerCase();
+    renderMenu();
+  };
+  recognition.onend = () => {
+    micListening = false;
+    document.getElementById('micBtn').classList.remove('listening');
+  };
+}
+
+function renderCart() {
+  const title = document.getElementById('cartTitle');
+  const content = document.getElementById('cartContent');
+  const count = cart.reduce((sum, x) => sum + x.number, 0);
+  title.textContent = `My Cart (${count})`;
+  if (cart.length === 0) {
+    content.innerHTML = `<div class="empty-cart">Your cart is empty.<br>Go add some delicious food.</div>`;
+    return;
+  }
+  content.innerHTML = `
+    <table class="cart-table">
+      <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th></th></tr></thead>
+      <tbody>${cart.map((item, i) => `
+        <tr>
+          <td>${item.name} (${item.portion})</td>
+          <td>${item.number}</td>
+          <td>Rs ${(item.number * item.price).toFixed(2)}</td>
+          <td><button class="add-btn" style="padding:4px 10px" onclick="removeItem(${i})">X</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function removeItem(i) {
+  cart.splice(i, 1);
+  renderCart();
+  updateCartBar();
+}
+
+async function placeOrder() {
+  if (cart.length === 0) { showToast('Add items first'); return; }
+  try {
+    const payload = {
+      restaurant_id: restaurantId,
+      table_id: tableId,
+      items: cart.map((item) => ({ item_id: item.item_id, quantity: item.number, portion: item.portion }))
+    };
+    const data = await apiRequest('/customer/order', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    currentOrderId = data.order_id;
+    document.getElementById('orderNote').value = '';
+    document.getElementById('prepStatus').textContent = `Order #${currentOrderId} placed. Kitchen is preparing your food...`;
+    goTo('preparing');
+    startStatusPolling();
+  } catch (err) {
+    showToast(err.message || 'Failed to place order');
+  }
+}
+
+function startStatusPolling() {
+  stopStatusPolling();
+  if (!currentOrderId) return;
+  pollTimer = setInterval(async () => {
+    try {
+      const statusData = await apiRequest(`/customer/order/${currentOrderId}/status`);
+      const uiStatus = statusData.ui_status || statusData.status;
+      if (uiStatus === 'Completed') {
+        document.getElementById('prepStatus').textContent = `Order #${currentOrderId} is ready. Please collect from the service desk.`;
+      } else if (uiStatus === 'Preparing') {
+        document.getElementById('prepStatus').textContent = `Order #${currentOrderId} is being prepared...`;
+      } else {
+        document.getElementById('prepStatus').textContent = `Order #${currentOrderId} received by kitchen.`;
+      }
+    } catch (_err) {
+      // Keep UI running even if a single poll fails
+    }
+  }, 5000);
+}
+
+function stopStatusPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
+function donePreparing() {
+  cart = [];
+  currentOrderId = null;
+  stopStatusPolling();
+  updateCartBar();
+  goTo('menu');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+(async function init() {
+  parseParams();
+  try {
+    await loadMenu();
+    showToast(`Connected to table ${tableId || "auto"}`);
+  } catch (err) {
+    document.getElementById('menuList').innerHTML = `<div class="no-results">Failed to load menu: ${err.message}</div>`;
+    showToast('Backend API not reachable');
+  }
+})();
+</script>
+</body>
+</html>
